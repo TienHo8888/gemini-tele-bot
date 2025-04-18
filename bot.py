@@ -1,4 +1,18 @@
 
+from flask import Flask
+import threading
+
+web_app = Flask(__name__)
+
+@web_app.route('/')
+def home():
+    return "✅ Bot Telegram đang hoạt động!"
+
+def keep_alive():
+    web_app.run(host="0.0.0.0", port=8080)
+
+
+
 import logging
 import asyncio
 import json
@@ -94,7 +108,8 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     context_text = "\n".join(context_memory[user_id])
     response = await get_gemini_response(context_text)
     context_memory[user_id].append(f"Bot: {response}")
-    await message.reply_text(response)
+    if response.strip() != user_input.strip():
+        await message.reply_text(response)
     log_chat(user_id, user_input, response)
     record_unknown_question(user_input)
 
@@ -105,6 +120,7 @@ def home():
 def keep_alive():
     web_app.run(host="0.0.0.0", port=8080)
 def main():
+    threading.Thread(target=keep_alive).start()
     import os
 
     # 👉 Gọi Flask giữ port sống
